@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/javascripts/angular.js"></script>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div ng-app="teacherDataApp" ng-controller="teacherDataCtrl">
+
+        <div class="row mx-auto justify-content-center">
+            <h1>Add Teacher Data</h1>
+        </div>
+
+        <div class="container-fluid">
+            <form>
+                <div class="row mx-auto justify-content-center">
+                    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2 ">
+                        <input type="hidden" id="_id" placeholder="ID" ng-Model="_id" required="true">
+                    </div>
+                </div>
+                <div class="row mx-auto justify-content-center">
+                    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2 ">
+                        <h4>Name:</h4>
+                    </div>
+                    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2 ">
+                        <input type="text" id="name" placeholder="Name" ng-Model="name" required="true">
+                    </div>
+                </div>
+                <div class="row mx-auto justify-content-center">
+                    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2 ">
+                        <h4>Phone No:</h4>
+                    </div>
+                    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2 ">
+                        <input type="text" id="phnum" placeholder="Phone Number" ng-Model="phnum" required="true">
+                    </div>
+                </div>
+                <div class="row mx-auto justify-content-center">
+                    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2 ">
+                        <h4>Age:</h4>
+                    </div>
+                    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2 ">
+                        <input type="text" id="age" placeholder="Age" ng-Model="age" required="true">
+                    </div>
+                </div>
+                <div class="row mx-auto justify-content-center">
+                    <div class="col-12 text-center">
+                        <button class="btn btn-primary" type="submit" ng-click="addPlan()">Add</button>
+                        <button class="btn btn-primary" type="submit" ng-click="clear()">Clear</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <br>
+        <br>
+        <br>
+        <div class="row mx-auto justify-content-center">
+            <h1>Details</h1>
+        </div>
+        <div class="container-fluid">
+            <div class="row mx-auto justify-content-center">
+                <table border="2px">
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone No</th>
+                        <th>Age</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                    <tr ng-repeat="plan in myData">
+                        <td><h4> {{plan.name}} </h4></td>
+                        <td><h4> {{plan.phnum}} </h4></td>
+                        <td><h4> {{plan.age}} </h4></td>
+                        <td><button class="btn btn-primary" ng-click="edit(plan._id, plan.name, plan.phnum, plan.age)">Edit</button></td>
+                        <td><button class="btn btn-primary" ng-click="del(plan._id)">Delete</button></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let app = angular.module('teacherDataApp', []);
+        app.controller('teacherDataCtrl', function($scope, $http) {
+            $http.get('http://localhost:3000/teacher-data/get-teacher-data')
+                .then( (result) => {
+                    console.log(result.data);
+                    $scope.myData = result.data;
+                })
+                .catch( (err) => {
+                    console.log(err);
+                });
+
+            $scope.addPlan = function(){
+                if ($scope._id.length > 0){
+                    const teacherData = {
+                        _id: $scope._id ,
+                        name : $scope.name ,
+                        phnum : $scope.phnum,
+                        age : $scope.age
+                    }
+                    $http.post('http://localhost:3000/teacher-data/update-teacher-data', teacherData)
+                        .then( (result) => {
+                            if(result.data.msg == 'Record Updated!'){
+                                console.log(result.data);
+                                alert('Data Updated!');
+                                for(let i=0; i<$scope.myData.length; i++){
+                                    if($scope.myData[i]._id== $scope._id){
+                                        $scope.myData[i] = teacherData;
+                                    }
+                                }
+                            }
+                        })
+                        .catch( (err) => {
+                            console.log(err);
+                        });
+                }
+                else {
+                    const teacherData = {
+                        _id: '',
+                        name : $scope.name ,
+                        phnum : $scope.phnum,
+                        age : $scope.age
+                }
+                    $http.post('http://localhost:3000/teacher-data/add-teacher-data', teacherData)
+                        .then( (result) => {
+                            if(result.data.msg == 'Record Added!'){
+                                console.log(result.data);
+                                alert('Data Added!');
+                                teacherData._id = result.data.obj._id;
+                                $scope.myData.push(teacherData);
+                            }
+                        })
+                        .catch( (err) => {
+                            console.log(err);
+                        });
+                    $scope.clear();
+                }
+            }
+
+            $scope._id = '';
+            $scope.name = '';
+            $scope.phnum= '';
+            $scope.age = '';
+
+            $scope.edit = function (_id, name, phnum, age) {
+                $scope._id = _id;
+                $scope.name = name;
+                $scope.phnum = phnum;
+                $scope.age = age;
+            }
+
+            $scope.clear = function(){
+                $scope._id = '';
+                $scope.name = '';
+                $scope.phnum= '';
+                $scope.age = '';
+            }
+
+            $scope.del = function (_id) {
+                const teacherData = {
+                    _id: _id
+                }
+                $http.post('http://localhost:3000/teacher-data/delete-teacher-data', teacherData)
+                    .then( (response) => {
+                        if (response.data.msg == 'Record Deleted!') {
+                            console.log(response.data);
+                            alert('Data Deleted!');
+                            $scope.myData = $scope.myData.filter(record => record._id != _id);
+                        }
+                        else {
+                            console.log(response.data);
+                            alert('UNSUCCESSFUL!')
+                        }
+                    })
+            }
+
+        });
+    </script>
+</body>
+</html>
